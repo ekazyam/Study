@@ -8,6 +8,6 @@ if __name__ == '__main__':
 
     # ループで処理する
     for line in f:
-    	print(line,end="")
+        print(line, end="")
 
     f.close()
