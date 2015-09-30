@@ -3,7 +3,8 @@ import atexit
 
 def show_message(f):
     """関数デコレータのテスト"""
-    print ('show_message関数です。')
+    print('show_message関数です。')
+
     def wrapper():
         print("ここは関数デコレータで定義したメッセージです。")
         return f()

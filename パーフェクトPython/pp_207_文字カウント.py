@@ -11,4 +11,3 @@ for line in f:
     if line.find(search) != -1:
         print(line, ' is find at original ', line.find(search))
 f.close()
-

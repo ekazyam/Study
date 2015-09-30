@@ -4,4 +4,4 @@
 
 # 定数
 TEISUU = "定数です"
-print (TEISUU)
+print(TEISUU)

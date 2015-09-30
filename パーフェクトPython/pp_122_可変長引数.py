@@ -1,4 +1,4 @@
-def function(*arg, *):
+def function(*arg):
     for i in arg:
         print(i)
 

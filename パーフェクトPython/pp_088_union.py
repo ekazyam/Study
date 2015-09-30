@@ -9,4 +9,4 @@ def uniontest():
 if __name__ == '__main__':
     # unionは非破壊的メソッドなので、別のオブジェクトに代入しないと消えます。
     uniontest()
-        print("test")
+    print("test")

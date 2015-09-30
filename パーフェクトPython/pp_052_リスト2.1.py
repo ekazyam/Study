@@ -1,12 +1,13 @@
 def main():
-	pass
+    pass
+    a = [1, 2, 3, 4, 5]
 
-	for i in range(1, 6):
-		if i % 2 == 0:
-			print("%sは偶数です。" % i)
-		else:
-			print("%sは奇数です。" % i)
+    for i in range(1, 6):
+        if i % 2 == 0:
+            print("%sは偶数です。" % i)
+        else:
+            print("%sは奇数です。" % i)
 
 if __name__ == "__main__":
-	main()
-	print ("実行形式は %s です。" % __name__)
+    main()
+    print("実行形式は %s です。" % __name__)
