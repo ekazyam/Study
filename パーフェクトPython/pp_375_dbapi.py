@@ -4,7 +4,6 @@ import sqlite3
 
 
 class MailAddress:
-
     def __init__(self, name, address):
         self.name = name
         self.address = address
