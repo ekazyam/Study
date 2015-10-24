@@ -24,5 +24,3 @@ if __name__ == "__main__":
     print(test.__doc__)
 
     print(test2.__doc__)
-
-print(aaa)
