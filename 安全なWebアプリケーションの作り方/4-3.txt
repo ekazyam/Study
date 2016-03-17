@@ -128,3 +128,92 @@ cookieが読み出される不具合が生じる。
 　　外部のサイトであった場合は、ユーザに確認し問題ないことを了承する。
   これをクッションページと呼ぶ。
   
+■Javascriptの動的生成
+★イベントハンドラのXSS(onload等)
+javascriptをパラメータ展開し、サーバー側でjavascriptを動的生成する例を考える。
+<body onload="init('<?php echo htmlspecialchars($_GET['name'],ENT_QUOTES) ?>')">
+
+以上の構文に対し、以下のパラメータを渡すことで任意のjavascriptが実行可能である。
+name=');alert(document.cookie)//
+
+init('');alert(document.cookie)//')が実行される。
+
+Javascriptの動的生成に関するエスケープは後述する。
+
+★script要素内のXSS(body中の<script></script>)
+以下の構文には脆弱性が含まれる。
+<script>
+	$('#name').text('<?php echo escape_js($_GET['name']); ?>');
+</script>
+nameパラメータを展開し、javascriptが実行される。
+しかし、nameパラメータに</script>が含まれていた場合、そこでjavascriptが終了してしまう。
+以下のnameパラメータを渡すと任意のjavascriptが実行される。
+</script><script>alert(document.cookie)//
+
+★javascriptの動的生成の脆弱性の対策
+1.javascriptの文法から" ' \ 改行コードをエスケープする。
+  "→\"
+  '→\'
+  \→\\
+  改行→\n
+2-1.イベントハンドラの中のjavascriptであれば、1.の方法の後、さらに
+　　　 htmlをエスケープし、ダブルクォートで囲む。
+2-2.script要素の中野javascriptであれば、1.の方法の後、さらに
+　　　　</という文字列が出現しないようにする。
+ただし、対策が複雑であり、推奨されない。
+
+★UnicodeエスケープによるJavascriptの脆弱性対策
+Javascriptを全てunicodeエスケープする手法がある。
+
+★script要素の外部でパラメータを定義し、Javascriptから参照する手法
+javascriptの動的生成を避ける事を目的とし、javascript以外で定義した
+パラメータを読み込む手法を考える。
+hiddenパラメータで定義した値はJavascriptから読み込むことができる。
+また、属性値はhtmlscpecialcharasでエスケープした後、
+ダブルクォートで囲む手順を定石として実施する。
+<input type="hidden" id="familyname" value="<?php
+	echo htmlspecialchars($familyname,ENT_COMPAT,'UTF-8'); ?>">
+
+<script type="text/javascript">
+	var familyname = document.getElementById('familyname').value;
+</script>
+
+メリットとして、javascriptの動的生成を回避できるので脆弱性の防止になる。
+デメリットとして、javascriptで参照するパラメータが外部で定義されるので、
+javascriptの可読性が落ちる。
+
+■DOM based XSS
+Javascriptによりクライアント側で表示処理を行うスクリプトを考える。
+以下のスクリプトは脆弱性を含む。
+<body>
+こんにちは
+</body>
+<script type="text/javascript">
+	document.URL.match(/name=([^&]*)/);
+	document.write(unescape(RegExp.$1));
+</script>
+
+以下の様なURLでアクセスした場合に任意のJavascriptが実行される。
+http://example.jp/43/43-011.html?name=<script>alert(document.cookie)</script>
+
+★DOM based XSSへの対策
+jqueryのライブラリではtext関数を用いて画面表示することで自動的にエスケープされる。
+<script type="text/javascript">
+	if(document.URL.match(/name=([^&]*)/))
+	{
+		var name = unescape(RegExp.$1);
+		$('#name').text(name);
+	}
+</script>
+
+★HTMLタグやCSSの入力を許可するサイトを構築する場合
+構文が複雑であるため、htmlを解析するライブラリを利用することを推奨。
+PHPから利用できる解析ライブラリはHTML Purifierなどがある。
+
+■エラーメッセージの抑制
+エラー内容が攻撃者にとって有益である可能性がある内部上が含まれる。
+個人情報をエラー内容が含まれることにより情報が外部に漏れる。
+これらを糸口として攻撃が行われる可能性があるため、詳細な内容は
+エラーログに出力するに留める。
+PHPの場合、詳細なエラーを抑制する場合は以下を設定する。
+display_errors = Off
