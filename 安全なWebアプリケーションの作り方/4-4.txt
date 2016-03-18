@@ -100,3 +100,33 @@ SQLのコンパイルはDBサーバで実行される。
    ライブラリにバグが無ければ正常にデータは処理される。
 1,2のどちらの手法によってもSQLインジェクションは防止できるが、原理的に不可能である点を考慮し、
 1.の静的プレースホルダーを利用することを推奨。
+
+☆検索条件が変化する場合の対処
+検索の値/文字だけでなく、条件そのものが変化する場合は、
+プレースホルダーを含む検索条件を文字列として連結し、SQL文を構築する。
+$sql = 'SELECT id, title, author ,publisher, date, price FROM books';
+if($title !== '')//titleに対する条件を付与
+{
+	$conditions[] = "title LIKE ? ESCAPE '#'";
+	$ph_tyle[] = 'text';
+	$php_value[] = escape_wildcard($title);
+}
+if($id !== '')//idに対する条件を付与
+{
+	$conditions[] = "price <= ?";
+	$ph_tyle[] = 'integer';
+	$php_value[] = $price;
+}
+
+☆列でソートを実施する場合
+条件を付与し、列でソートを実施する場合を考える。
+SELECT * FROM books ORDER BY $row
+
+そこで、以下の構文をソート条件として実行する。
+cast ((select id||':'pwd FROM users limit 1) as integer)
+
+$rowが展開されると以下の構文となる。
+SELECT * FROM books ORDER BY cast ((select id||':'pwd FROM users limit 1) as integer)
+
+この構文では副問い合わせが実行され、本来のSQLは構文エラーとなる。
+副問い合わせで実施した内容により、idとpassが漏洩する。
